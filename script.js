@@ -86,6 +86,7 @@ const controller = (function gameController() {
   let xTurn = true;
   const xSymbol = "✖";
   const oSymbol = "Ｏ";
+
   function playMove(target) {
     const symbol = xTurn ? xSymbol : oSymbol;
     if (board.placePiece(target.id[0], target.id[1], symbol)) {
@@ -118,6 +119,10 @@ const controller = (function gameController() {
   const winBox = document.querySelector("dialog");
   const winText = document.querySelector(".winner");
 
+  const xScore = document.querySelector("#x-score");
+  const oScore = document.querySelector("#o-score");
+  const tieScore = document.querySelector("#tie-score");
+
   function clearBoard() {
     boardButtons.forEach((elem) => {
       elem.textContent = "";
@@ -139,12 +144,15 @@ const controller = (function gameController() {
       if (result !== -1) {
         if (result === 1) {
           winText.textContent = "X WINS";
+          +xScore.textContent++;
           winBox.showModal();
         } else if (result === 2) {
           winText.textContent = "O WINS";
+          +oScore.textContent++;
           winBox.showModal();
         } else if (result === 3) {
           winText.textContent = "DRAW";
+          +tieScore.textContent++;
           winBox.showModal();
         }
       }
