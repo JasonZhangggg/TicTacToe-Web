@@ -23,12 +23,9 @@ h1 {
 }
 .green-strip {
   background-color: #6c755a;
-  display: flex;
-  justify-content: center;
-  align-items: center;
   flex-direction: column;
   width: 100vw;
-  height: 70vh;
+  height: 80vh;
 }
 .board {
   --grid-dim: 200px;
@@ -38,16 +35,13 @@ h1 {
   gap: 15px;
 }
 .container {
-  display: flex;
+  height: 100vh;
+  color: white;
   flex-direction: column;
-  align-items: center;
-  justify-content: center;
 }
 
 .score-div {
-  display: flex;
   flex-direction: column;
-  align-items: center;
 }
 
 .score {
@@ -55,6 +49,7 @@ h1 {
 }
 
 p {
+  color: white;
   font-size: 25px;
   font-weight: 300;
   margin-bottom: 8px;
@@ -63,17 +58,39 @@ p {
 
 .stats {
   margin-top: 30px;
-  color: white;
-  display: flex;
-  align-items: center;
-  justify-content: center;
   gap: 50px;
 }
 
-img,
-.players {
+img.players {
   height: 40px;
+  margin: 4px 0px;
 }
 
-players-div {
+.playerButton {
+  background-color: #6c755a;
+  border-width: 0;
+  font-family: Roboto;
+  font-weight: 200;
+}
+
+.playerButton:hover {
+  opacity: 70%;
+}
+
+.stats,
+.score-div,
+.container,
+.green-strip {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+dialog {
+  margin: auto;
+  border-width: 0px;
+  background: transparent;
+}
+.winner {
+  font-size: 200px;
 }
