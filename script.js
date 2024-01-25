@@ -1,7 +1,3 @@
-function player() {
-  let score = 0;
-}
-
 /**
  * Board
  */
@@ -13,11 +9,11 @@ const board = (function gameBoard() {
   ];
 
   function placePiece(row, col, piece) {
-    if (board[row][col] === ".") {
-      board[row][col] = piece;
-      return true;
-    }
-    return false;
+    board[row][col] = piece;
+  }
+
+  function isValid(row, col) {
+    return board[row][col] === ".";
   }
 
   function checkWin(player) {
@@ -74,7 +70,23 @@ const board = (function gameBoard() {
     ];
   }
 
-  return { placePiece, checkWin, checkDraw, clear };
+  function getMoves() {
+    let moves = [];
+    for (let row = 0; row < 3; row++) {
+      for (let col = 0; col < 3; col++) {
+        if (isValid(row, col)) {
+          moves.push([row, col]);
+        }
+      }
+    }
+    return moves;
+  }
+
+  function isEmpty() {
+    return board.every((row) => row.every((cell) => cell === "."));
+  }
+
+  return { isValid, placePiece, checkWin, checkDraw, clear, isEmpty, getMoves };
 })();
 
 /**
@@ -84,33 +96,90 @@ const board = (function gameBoard() {
  */
 const controller = (function gameController() {
   let xTurn = true;
+  let starter = "x";
+
+  function playMove(row, col) {
+    const symbol = xTurn ? "x" : "o";
+    board.placePiece(row, col, symbol);
+    if (board.checkWin("x")) {
+      return 1;
+    } else if (board.checkWin("o")) {
+      return 2;
+    } else if (board.checkDraw()) {
+      return 3;
+    }
+    return 0;
+  }
+
+  function minmax(depth, isCompTurn) {
+    if (board.checkWin("o")) {
+      return depth + 10;
+    } else if (board.checkWin("x")) {
+      return depth - 10;
+    } else if (board.checkDraw()) {
+      return 0;
+    }
+    const symbol = isCompTurn ? "o" : "x";
+    let bestScore = isCompTurn
+      ? Number.MIN_SAFE_INTEGER
+      : Number.MAX_SAFE_INTEGER;
+    board.getMoves().forEach((move) => {
+      const row = move[0];
+      const col = move[1];
+      board.placePiece(row, col, symbol);
+      let score = minmax(depth + 1, !isCompTurn);
+      board.placePiece(row, col, ".");
+
+      bestScore = isCompTurn
+        ? Math.max(bestScore, score)
+        : Math.min(bestScore, score);
+    });
+    return bestScore;
+  }
+
+  function findBestMove() {
+    let bestRow;
+    let bestCol;
+    let bestScore = Number.MIN_SAFE_INTEGER;
+    board.getMoves().forEach((move) => {
+      const row = move[0];
+      const col = move[1];
+      board.placePiece(row, col, "o");
+      let newScore = minmax(0, false);
+      board.placePiece(row, col, ".");
+      if (newScore > bestScore) {
+        bestRow = row;
+        bestCol = col;
+        bestScore = newScore;
+      }
+    });
+    return [bestRow, bestCol];
+  }
+
+  function getTurn() {
+    return xTurn;
+  }
+
+  function setTurn(turn) {
+    xTurn = turn;
+  }
+
+  function flipStarter() {
+    if (starter === "x") {
+      xTurn = false;
+      starter = "o";
+    } else {
+      xTurn = true;
+      starter = "x";
+    }
+  }
+  return { playMove, setTurn, getTurn, flipStarter, findBestMove };
+})();
+
+(function eventController() {
   const xSymbol = "✖";
   const oSymbol = "Ｏ";
 
-  function playMove(target) {
-    const symbol = xTurn ? xSymbol : oSymbol;
-    if (board.placePiece(target.id[0], target.id[1], symbol)) {
-      target.textContent = symbol;
-      xTurn = !xTurn;
-      if (board.checkWin(xSymbol)) {
-        xTurn = true;
-        return 1;
-      } else if (board.checkWin(oSymbol)) {
-        xTurn = true;
-        return 2;
-      } else if (board.checkDraw()) {
-        xTurn = true;
-        return 3;
-      }
-      return 0;
-    }
-    return -1;
-  }
-
-  return { playMove };
-})();
-
-(function displayController() {
   let numPlayers = 1;
 
   const boardButtons = document.querySelectorAll(".board > button");
@@ -129,37 +198,68 @@ const controller = (function gameController() {
     });
   }
 
+  function playCompMove() {
+    let moves = controller.findBestMove();
+    let compRow = moves[0];
+    let compCol = moves[1];
+    console.log(compRow, compCol);
+    let result = controller.playMove(compRow, compCol);
+    boardButtons[compCol + compRow * 3].textContent = oSymbol;
+    controller.setTurn(!controller.getTurn());
+    displayResult(result);
+    return result;
+  }
+
+  function displayResult(result) {
+    if (result === 1) {
+      winText.textContent = "X WINS";
+      +xScore.textContent++;
+      winBox.showModal();
+    } else if (result === 2) {
+      winText.textContent = "O WINS";
+      +oScore.textContent++;
+      winBox.showModal();
+    } else if (result === 3) {
+      winText.textContent = "DRAW";
+      +tieScore.textContent++;
+      winBox.showModal();
+    }
+  }
   document.addEventListener("click", (e) => {
     if (e.target.contains(winBox)) {
       winBox.close();
       board.clear();
       clearBoard();
+      controller.flipStarter();
+      if (!controller.getTurn() && numPlayers === 1) {
+        playCompMove();
+      }
     }
   });
 
   boardButtons.forEach((elem) => {
     elem.addEventListener("click", (e) => {
       let target = e.target;
-      let result = controller.playMove(target);
-      if (result !== -1) {
-        if (result === 1) {
-          winText.textContent = "X WINS";
-          +xScore.textContent++;
-          winBox.showModal();
-        } else if (result === 2) {
-          winText.textContent = "O WINS";
-          +oScore.textContent++;
-          winBox.showModal();
-        } else if (result === 3) {
-          winText.textContent = "DRAW";
-          +tieScore.textContent++;
-          winBox.showModal();
+      let row = target.id[0];
+      let col = target.id[1];
+      if (board.isValid(row, col)) {
+        let result = controller.playMove(row, col);
+        target.textContent = controller.getTurn() ? xSymbol : oSymbol;
+        controller.setTurn(!controller.getTurn());
+        displayResult(result);
+        if (result === 0 && !controller.getTurn() && numPlayers === 1) {
+          result = playCompMove();
         }
       }
     });
   });
 
   playerButton.addEventListener("click", (e) => {
+    if (!board.isEmpty()) {
+      board.clear();
+      clearBoard();
+      controller.setTurn(true);
+    }
     if (numPlayers == 1) {
       e.target.parentElement.children[0].src = "images/2player.svg";
       e.target.parentElement.children[1].textContent = "2P";
