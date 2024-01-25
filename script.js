@@ -192,6 +192,10 @@ const controller = (function gameController() {
   const oScore = document.querySelector("#o-score");
   const tieScore = document.querySelector("#tie-score");
 
+  const player2Name = document.querySelector("#player2Name");
+  const playerIcon = document.querySelector(".players");
+  const numPlayerText = document.querySelector(".numPlayers");
+
   function clearBoard() {
     boardButtons.forEach((elem) => {
       elem.textContent = "";
@@ -261,13 +265,17 @@ const controller = (function gameController() {
       controller.setTurn(true);
     }
     if (numPlayers == 1) {
-      e.target.parentElement.children[0].src = "images/2player.svg";
-      e.target.parentElement.children[1].textContent = "2P";
+      playerIcon.src = "images/2player.svg";
+      numPlayerText.textContent = "2P";
+      player2Name.textContent = "PLAYER(O)";
       numPlayers = 2;
     } else {
-      e.target.parentElement.children[0].src = "images/1player.svg";
-      e.target.parentElement.children[1].textContent = "1P";
+      playerIcon.src = "images/1player.svg";
+      numPlayerText.textContent = "1P";
+      player2Name.textContent = "COMPUTER(O)";
       numPlayers = 1;
     }
+    xScore.textContent = 0;
+    oScore.textContent = 0;
   });
 })();
